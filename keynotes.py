@@ -13,19 +13,46 @@ import seaborn as sns
 IMAGE_SIZE = (128, 128)
 BATCH_SIZE = 32
 EPOCHS = 30
-DATASET_PATH = "specto"  
+output_image = "specto1"
+input_audio = "Notes Datasets"
+DATASET_PATH = "specto1"
 MODEL_SAVE_PATH = "guitar_note_classifier.h5"
 
-def audio_to_spectrogram(input_audio, output_image):
-    y, sr = librosa.load(input_audio)
-    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
-    S_dB = librosa.power_to_db(S, ref=np.max)
 
-    plt.figure(figsize=(2, 2))
-    librosa.display.specshow(S_dB, sr=sr, x_axis=None, y_axis=None)
-    plt.axis('off')
-    plt.savefig(output_image, bbox_inches='tight', pad_inches=0)
-    plt.close()
+def audio_to_spectrogram(input_directory, output_directory):
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
+
+    for root, _, files in os.walk(input_directory):  # os.walk for recursive traversal
+        for file_name in files:
+            if file_name.endswith('.wav'):  # Process only .wav files
+                try:
+                    file_path = os.path.join(root, file_name)
+                    print(f"Processing: {file_path}")
+
+                    # Load the audio file
+                    y, sr = librosa.load(file_path)
+                    S = librosa.feature.melspectrogram(y=y, sr=sr, n_mels=128)
+                    S_dB = librosa.power_to_db(S, ref=np.max)
+
+                    # Create output directory structure
+                    relative_path = os.path.relpath(root, input_directory)
+                    class_folder = os.path.join(output_directory, relative_path)
+                    os.makedirs(class_folder, exist_ok=True)
+
+                    # Save the spectrogram
+                    output_file = os.path.join(class_folder, f"{os.path.splitext(file_name)[0]}.png")
+                    plt.figure(figsize=(2, 2))
+                    librosa.display.specshow(S_dB, sr=sr, x_axis=None, y_axis=None)
+                    plt.axis('off')
+                    plt.savefig(output_file, bbox_inches='tight', pad_inches=0)
+                    plt.close()
+
+                    print(f"Saved spectrogram to: {output_file}")
+                except Exception as e:
+                    print(f"Error processing {file_path}: {e}")
+
+
 
 def prepare_data(dataset_path):
     datagen = ImageDataGenerator(rescale=1.0 / 255.0, validation_split=0.2)
@@ -87,6 +114,8 @@ def evaluate_model(model, val_gen):
     print(classification_report(y_true, y_pred, target_names=list(val_gen.class_indices.keys())))
 
 if __name__ == "__main__":
+    audio_to_spectrogram("Notes Datasets", "specto1")
     model, history, val_gen = train_model()
     plot_history(history)
     evaluate_model(model, val_gen)
+
