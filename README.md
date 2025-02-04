@@ -1,131 +1,129 @@
-# README: Guitar Note Classifier
+# Guitar Note Classifier
 
 ## Overview
-The Guitar Note Classifier is a machine learning project that classifies guitar notes using audio files. The system processes `.wav` files, converts them into spectrogram images, and trains a Convolutional Neural Network (CNN) to classify these notes. This README explains how to set up, run, and use the project effectively.
-
----
+The Guitar Note Classifier is a machine learning project designed to classify guitar notes from audio files. The system processes `.wav` and `.mp3` files, detects note onsets, converts them into spectrogram images, and uses a trained Convolutional Neural Network (CNN) to classify these notes. This README explains how to set up, run, and use the project effectively.
 
 ## Features
-- Converts audio files in `.wav` format into spectrogram images.
-- Handles nested directory structures for audio files.
-- Trains a CNN to classify guitar notes from spectrograms.
-- Provides evaluation metrics like accuracy, confusion matrix, and classification report.
-
----
+- Detects onsets (note start times) in an audio file.
+- Converts audio segments into Mel spectrograms for classification.
+- Trains a CNN model to classify guitar notes.
+- Uses a trained model to predict notes in an input musical piece.
+- Provides visualization of the waveform with detected onsets.
 
 ## Prerequisites
 Before running the project, ensure you have the following installed:
 
-- Python 3.8 or later
-- Required Python libraries:
-  - `tensorflow`
-  - `librosa`
-  - `matplotlib`
-  - `numpy`
-  - `seaborn`
-  - `scikit-learn`
+### Required Software
+- **Python** 3.8 or later
 
+### Required Python Libraries:
+- `tensorflow`
+- `librosa`
+- `matplotlib`
+- `numpy`
+- `scikit-learn`
+
+### Installation
 Install the required libraries using:
-```bash
-pip install tensorflow librosa matplotlib numpy seaborn scikit-learn
+```sh
+pip install tensorflow librosa matplotlib numpy scikit-learn
 ```
 
----
-
 ## Setup
+
 ### 1. Clone the Repository
 Clone the project to your local machine:
-```bash
+```sh
 git clone <repository_url>
 cd <repository_directory>
 ```
 
 ### 2. Directory Structure
-Organize your audio files in a directory. The structure should look like this:
+Organize your dataset as follows:
 ```
-Notes Datasets/
-├── Class1/
+Guitar Dataset/
+├── A2/
 │   ├── file1.wav
 │   ├── file2.wav
-├── Class2/
+├── B3/
 │   ├── file3.wav
 │   ├── file4.wav
+...
 ```
+This structure ensures the script processes files from `Guitar Dataset` for training and testing.
 
-The script will process files from the `Notes Datasets` directory and save spectrograms in the `specto1` directory.
+## Model Training
 
-### 3. Adjust Parameters
-Open the script file (`keynotes.py`) and adjust parameters if needed:
-- `IMAGE_SIZE`: Dimensions of spectrogram images (default: `(128, 128)`).
-- `BATCH_SIZE`: Batch size for training (default: `32`).
-- `EPOCHS`: Number of training epochs (default: `30`).
-- `DATASET_PATH`: Path to the spectrogram directory (`specto1`).
-- `MODEL_SAVE_PATH`: Path to save the trained model (`guitar_note_classifier.h5`).
-
----
-
-## How to Run the Project
-### 1. Generate Spectrograms
-Run the script to process all `.wav` files in the `Notes Datasets` directory and generate spectrograms:
-```bash
-python keynotes.py
+### 1. Preprocessing & Training the CNN Model
+Run the following script to train the model:
+```sh
+python train_model.py
 ```
-
 This will:
-1. Process audio files recursively.
-2. Save spectrograms in `specto1` with the same folder structure as `Notes Datasets`.
+- Load `.wav` files from `Guitar Dataset`.
+- Convert each file into a **Mel spectrogram**.
+- Train a CNN model to classify guitar notes.
+- Save the trained model as `note_classifier.h5`.
 
-### 2. Train the Model
-The script will automatically start training the CNN once spectrograms are generated. The model will be saved to the path specified in `MODEL_SAVE_PATH`.
+### 2. Model Configuration
+You can adjust model parameters in `train_model.py`:
+- `TARGET_SHAPE`: Spectrogram image dimensions (default: `(128, 128)`).
+- `EPOCHS`: Number of training epochs (default: `20`).
+- `BATCH_SIZE`: Number of samples per batch (default: `32`).
 
-### 3. Evaluate the Model
-After training, the script will:
-- Plot training and validation accuracy over epochs.
-- Generate a confusion matrix and classification report.
+## Note Detection in a Musical Piece
+After training, you can use the model to detect notes in a musical file.
 
----
-
-## Customization
-### Add More Classes
-To train the model with additional classes:
-1. Add new folders to `Notes Datasets`, each representing a class.
-2. Place `.wav` files in the appropriate folders.
-3. Re-run the script to regenerate spectrograms and retrain the model.
-
-### Use a Pre-trained Model
-If you have a pre-trained model, you can load it using:
-```python
-from tensorflow.keras.models import load_model
-model = load_model('path_to_saved_model.h5')
+### 1. Run the Note Detection Script
+```sh
+python detect_notes.py
 ```
+This script will:
+- Load an input musical piece (`.mp3` or `.wav`).
+- Detect note onsets using **Librosa's onset detection**.
+- Extract audio segments around detected onsets.
+- Convert each segment into a **Mel spectrogram**.
+- Use the trained CNN model to classify the notes.
+- Display detected notes and visualize the waveform.
 
----
+### 2. Adjusting Parameters
+Modify the following parameters in `detect_notes.py`:
+- `MUSICAL_PIECE_PATH`: Path to the audio file.
+- `SEGMENT_DURATION`: Duration of each note segment (default: `0.5` seconds).
+- `SR`: Sampling rate (default: `44100`).
 
 ## Outputs
-1. **Trained Model**:
-   - Saved to the path specified in `MODEL_SAVE_PATH`.
-2. **Evaluation Metrics**:
-   - Accuracy and loss plots.
-   - Confusion matrix and classification report.
-3. **Spectrograms**:
-   - Saved in `specto1`, organized by class.
 
----
+### 1. Trained Model
+- Saved as `note_classifier.h5`.
+
+### 2. Evaluation Metrics
+- Accuracy and loss plots.
+- Confusion matrix and classification report.
+
+### 3. Detected Notes
+- Displayed in the terminal as:
+```
+Time: 1.23s -> Note: A3
+Time: 2.45s -> Note: Csharp4
+```
+- Waveform visualization with marked detected onsets.
 
 ## Troubleshooting
-### No Images Found
-- Ensure that `Notes Datasets` contains `.wav` files in correctly named subdirectories.
-- Verify that the spectrogram generation step ran successfully.
+
+### No Notes Detected
+- Ensure the input audio file has clear note attacks.
+- Adjust onset detection parameters in `detect_notes.py`.
 
 ### Training Issues
-- Check that `specto1` contains spectrograms in the correct structure.
-- Ensure there are enough samples for each class to avoid imbalance.
-
----
+- Verify dataset structure (`Guitar Dataset` should contain `.wav` files in subdirectories).
+- Ensure enough samples exist for each class to prevent imbalance.
 
 ## Future Improvements
-1. Add support for other audio formats like `.mp3` or `.flac`.
-2. Implement advanced CNN architectures like ResNet.
-3. Develop a user-friendly interface for real-time classification.
+- Support for other audio formats like `.flac`.
+- Implement a more advanced CNN architecture (e.g., **ResNet**).
+- Develop a user-friendly GUI for real-time classification.
 
----
+## Conclusion
+This project provides an end-to-end solution for detecting and classifying guitar notes from audio files. By using onset detection and CNN-based classification, the system effectively identifies notes in a musical piece. Contributions and improvements are welcome!
+
